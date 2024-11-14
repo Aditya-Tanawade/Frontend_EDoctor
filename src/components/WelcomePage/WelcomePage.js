@@ -1,7 +1,7 @@
 // WelcomePage.js
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './WelcomePage.css';
 
 const WelcomePage = () => {
@@ -32,7 +32,7 @@ const WelcomePage = () => {
           <div className="text">
             <h1 style={{ marginLeft: '-5%' }}>Outpatient Doctor Appointment System</h1><br />
             <h5 style={{ fontFamily: 'roboto', marginLeft: '10%', color: 'rgb(248, 247, 247)' }}>
-            Infosys Springboard Project
+              Developed by - Gowthamraj K
             </h5><br /><br />
           </div><br />
           <img className="floating" id="img3" src="assets/img/healthcaresystem.png" alt="Healthcare" />
