@@ -1,118 +1,206 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';  // Correct import for react-router v6
 import './Login.css';
 
-const LoginPage = () => {
+const Login = () => {
   const [user, setUser] = useState({ email: '', password: '' });
-  const [role, setRole] = useState(''); // Track selected role
-  const [msg, setMsg] = useState('');
+  const [doctor, setDoctor] = useState({ email: '', password: '' });
+  const [admin, setAdmin] = useState({ email: '', password: '' });
+  const [msg, setMsg] = useState("");
+  const [role, setRole] = useState("user");
 
-  const handleChange = (e) => {
-    // Generic handle for form changes based on role
-    if (role === 'user') {
-      setUser({ ...user, [e.target.name]: e.target.value });
-    }
-    // Implement similar state management for other roles as needed
+  const navigate = useNavigate();  // useNavigate instead of useHistory
+
+  const handleUserChange = (e) => {
+    setUser({ ...user, [e.target.name]: e.target.value });
   };
 
-  const handleRoleSelect = (selectedRole) => {
-    setRole(selectedRole);
-    setMsg(''); // Clear previous messages
-    setUser({ email: '', password: '' }); // Reset user state when switching roles
+  const handleDoctorChange = (e) => {
+    setDoctor({ ...doctor, [e.target.name]: e.target.value });
   };
 
-  const login = (e) => {
+  const handleAdminChange = (e) => {
+    setAdmin({ ...admin, [e.target.name]: e.target.value });
+  };
+
+  const loginUser = async (e) => {
     e.preventDefault();
-    // Implement role-based login logic here
-    if (role === 'user') {
-      setMsg('User logged in');
-    } else if (role === 'doctor') {
-      setMsg('Doctor logged in');
-    } else if (role === 'admin') {
-      setMsg('Admin logged in');
-    } else {
-      setMsg('Please select a role');
+    try {
+      const response = await fetch('/login/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user),
+      });
+      const data = await response.json();
+      if (data.success) {
+        sessionStorage.setItem('loggedUser', user.email);
+        sessionStorage.setItem('ROLE', 'user');
+        navigate('/userdashboard');  // use navigate instead of history.push
+      } else {
+        setMsg('Invalid credentials');
+      }
+    } catch (err) {
+      setMsg('Login failed');
     }
+  };
+
+  const loginDoctor = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch('/login/doctor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(doctor),
+      });
+      const data = await response.json();
+      if (data.success) {
+        sessionStorage.setItem('loggedUser', doctor.email);
+        sessionStorage.setItem('ROLE', 'doctor');
+        navigate('/doctordashboard');  // use navigate instead of history.push
+      } else {
+        setMsg('Invalid credentials');
+      }
+    } catch (err) {
+      setMsg('Login failed');
+    }
+  };
+
+  const adminLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch('/login/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(admin),
+      });
+      const data = await response.json();
+      if (data.success) {
+        sessionStorage.setItem('loggedUser', admin.email);
+        sessionStorage.setItem('ROLE', 'admin');
+        navigate('/admindashboard');  // use navigate instead of history.push
+      } else {
+        setMsg('Invalid credentials');
+      }
+    } catch (err) {
+      setMsg('Login failed');
+    }
+  };
+
+  const handleRoleClick = (role) => {
+    setRole(role);
   };
 
   return (
     <div className="wrapper">
       <div className="container">
-        {/* Role Selection Buttons */}
-        <div className="role-selection">
-          <button className="headbtn1" onClick={() => handleRoleSelect('user')}>User</button>
-          <button className="headbtn2" onClick={() => handleRoleSelect('doctor')}>Doctor</button>
-          <button className="headbtn3" onClick={() => handleRoleSelect('admin')}>Admin</button>
-        </div>
+        <button className="headbtn1" onClick={() => handleRoleClick("user")}>User</button>
+        <button className="headbtn2" onClick={() => handleRoleClick("doctor")}>Doctor</button>
+        <button className="headbtn3" onClick={() => handleRoleClick("admin")}>Admin</button>
 
-        {/* Login Form */}
-        <div className={`${role}-login-form`}>
-          <h2 className="textual">{role.charAt(0).toUpperCase() + role.slice(1)} Login</h2>
-          <form onSubmit={login}>
-            <small className="text-danger"><b>{msg}</b></small>
-            
-            <div className="form-group">
-              <label htmlFor={`${role}email`}>{role.charAt(0).toUpperCase() + role.slice(1)} Email address: <b className="text-danger">*</b></label>
-              <input
-                type="email"
-                className="form-control"
-                placeholder="Enter email"
-                name="email"
-                value={user.email}
-                onChange={handleChange}
-                required
-                pattern="^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="pwd" style={{ marginTop: '5px' }}>{role.charAt(0).toUpperCase() + role.slice(1)} Password: <b className="text-danger">*</b></label>
-              <input
-                type="password"
-                className="form-control"
-                placeholder="Enter password"
-                name="password"
-                value={user.password}
-                onChange={handleChange}
-                required
-              />
-              <small style={{ color: 'gray', fontSize: '10px' }}>
-                At least one uppercase, numeric digit, lowercase, special character, length of 6-20
-              </small>
-            </div>
-
-            <div className="checkbox" style={{ marginTop: '5px' }}>
-              <small style={{ color: 'gray' }}>
-                <input type="checkbox" name="remember" /> Remember me
-              </small>
-              <small style={{ color: 'navy', marginLeft: '42%', cursor: 'pointer' }}>Forgot password?</small>
-            </div>
-
-            <button type="submit" className="btn loginbtn" disabled={!user.email || !user.password}>
-              Login
-            </button>
-          </form>
-          
-          <div className="sign-up" style={{ textAlign: 'center', marginTop: '10px' }}>
-            Don't have an Account?{' '}
-            <span style={{ color: 'navy', cursor: 'pointer' }} onClick={() => alert('Redirect to registration')}>
-              <b>Create One</b>
-            </span>
+        {role === "user" && (
+          <div className="user-login-form">
+            <h2 className="textual">User Login</h2>
+            <form onSubmit={loginUser}>
+              <small className="text-danger"><b>{msg}</b></small>
+              <div className="form-group">
+                <label>User Email address: <b className="text-danger">*</b></label>
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="Enter email"
+                  name="email"
+                  value={user.email}
+                  onChange={handleUserChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>User Password: <b className="text-danger">*</b></label>
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Enter password"
+                  name="password"
+                  value={user.password}
+                  onChange={handleUserChange}
+                  required
+                />
+              </div>
+              <button type="submit" className="btn loginbtn">Login</button>
+            </form>
           </div>
-          
-          <hr />
-          <p className="text-center mt-3"><b>or Login with</b></p>
-          <div className="text-center">
-            <i className="fa fa-google mx-3 fa-2x"></i>
-            <i className="fa fa-linkedin mx-3 fa-2x"></i>
-            <i className="fa fa-twitter mx-3 fa-2x"></i>
-            <i className="fa fa-windows mx-3 fa-2x"></i>
-            <i className="fa fa-github mx-3 fa-2x"></i>
+        )}
+
+        {role === "doctor" && (
+          <div className="doctor-login-form">
+            <h2 className="textual">Doctor Login</h2>
+            <form onSubmit={loginDoctor}>
+              <small className="text-danger"><b>{msg}</b></small>
+              <div className="form-group">
+                <label>Doctor Email address: <b className="text-danger">*</b></label>
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="Enter email"
+                  name="email"
+                  value={doctor.email}
+                  onChange={handleDoctorChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Doctor Password: <b className="text-danger">*</b></label>
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Enter password"
+                  name="password"
+                  value={doctor.password}
+                  onChange={handleDoctorChange}
+                  required
+                />
+              </div>
+              <button type="submit" className="btn loginbtn">Login</button>
+            </form>
           </div>
-        </div>
+        )}
+
+        {role === "admin" && (
+          <div className="admin-login-form">
+            <h2 className="textual">Admin Login</h2>
+            <form onSubmit={adminLogin}>
+              <small className="text-danger"><b>{msg}</b></small>
+              <div className="form-group">
+                <label>Admin Email address: <b className="text-danger">*</b></label>
+                <input
+                  type="email"
+                  className="form-control"
+                  placeholder="Enter email"
+                  name="email"
+                  value={admin.email}
+                  onChange={handleAdminChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Admin Password: <b className="text-danger">*</b></label>
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Enter password"
+                  name="password"
+                  value={admin.password}
+                  onChange={handleAdminChange}
+                  required
+                />
+              </div>
+              <button type="submit" className="btn loginbtn">Login</button>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default LoginPage;
-    
+export default Login;
